@@ -97,6 +97,8 @@ def reset_state():
     st.session_state.unresolved_axes = []
     st.session_state.answer_log = []
 
+if "mode" not in st.session_state:
+    st.session_state.mode = "general"
 if "base" not in st.session_state:
     reset_state()
 
@@ -108,16 +110,33 @@ except Exception as e:
     st.error(f"questions_bank.json 파일을 열 수 없습니다: {e}")
     st.stop()
 
-# 출제 범위 선택
-aud = st.radio("출제 범위 선택", options=["일반","어르신(65세 이상)"], index=0, horizontal=True)
-mode = "general" if aud.startswith("일반") else "senior"
-bank = filter_by_audience(DATA, mode)
+# === 모드 라디오 (변경 시 상태 초기화) ===
+def on_mode_change():
+    # 라디오 값 → 내부 모드값으로 변환
+    st.session_state.mode = "general" if st.session_state._aud.startswith("일반") else "senior"
+    # 모드가 바뀔 때마다 모든 진행상태 리셋
+    reset_state()
+
+st.radio(
+    "출제 범위 선택",
+    options=["일반","어르신(65세 이상)"],
+    index=0 if st.session_state.mode=="general" else 1,
+    horizontal=True,
+    key="_aud",
+    on_change=on_mode_change
+)
+
+# 현재 모드에 맞는 뱅크
+bank = filter_by_audience(DATA, st.session_state.mode)
 
 # ----------------------- 기본 문항 선택 -----------------------
 if not st.session_state.base:
     base, base_ids, used = [], [], {ax:set() for ax in AXES}
     for ax in AXES:
         qs = bank.get(ax, [])
+        if len(qs) < 2:
+            st.error(f"{ax} 축 문항이 2개 미만입니다. JSON을 보강하세요.")
+            st.stop()
         qA,qB = sample_two(qs)
         q1 = dict(id=f"base_{ax}_1", axis=ax, **qA)
         q2 = dict(id=f"base_{ax}_2", axis=ax, **qB)
