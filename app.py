@@ -49,56 +49,35 @@ def sample_two(lst):
         return [lst[idx[0]], lst[idx[0]]]
     return []
 
-def compute_mbti(ans_list):
-    count = dict(E=0,I=0,S=0,N=0,T=0,F=0,J=0,P=0)
+def compute_counts(answer_list):
+    counts = dict(E=0,I=0,S=0,N=0,T=0,F=0,J=0,P=0)
     totals = dict(EI=0,SN=0,TF=0,JP=0)
-    for a in ans_list:
+    for a in answer_list:
         v = a["value"]
-        if v in count:
-            count[v] += 1
+        if v in counts: counts[v]+=1
         totals[a["axis"]] += 1
-    diff = {
-        "EI": abs(count["E"]-count["I"]),
-        "SN": abs(count["S"]-count["N"]),
-        "TF": abs(count["T"]-count["F"]),
-        "JP": abs(count["J"]-count["P"]),
-    }
-    def pick(a,b,default):
-        return a if count[a] > count[b] else b if count[a] < count[b] else default
-    typ = pick("E","I","E")+pick("S","N","S")+pick("T","F","T")+pick("J","P","J")
-    return {"type":typ, "count":count, "totals":totals, "diff":diff}
+    return counts, totals
 
-def need_more_after2(axis, m): return m["totals"][axis]==2 and m["diff"][axis]==0
-def need_more_after4(axis, m): return m["totals"][axis]==4 and m["diff"][axis]==0
-def unresolved_after6(axis, m): return m["totals"][axis]==6 and m["diff"][axis]==0
+def format_type_with_tie(tokens_by_axis):
+    return "".join(tokens_by_axis[ax] for ax in AXES)
 
-def format_type_with_unresolved(model, unresolved_axes):
-    """
-    요구사항: 동률인 축은 괄호로 두 글자를 붙여 표기.
-    예: (EI)STJ, E(SN)TP 등
-    """
-    out=[]
-    for ax in AXES:
-        a,b = POLES[ax]
-        if ax in unresolved_axes:
-            out.append(f"({a}{b})")
-        else:
-            # 동률이 아니면 더 큰 쪽 한 글자
-            lead = a if model["count"][a] >= model["count"][b] else b
-            out.append(lead)
-    return "".join(out)
+def percent(a, b):
+    tot = a + b
+    if tot == 0: return (0, 0)
+    pa = int(round(a * 100.0 / tot))
+    pb = 100 - pa
+    return (pa, pb)
 
 # ----------------------- 상태 초기화 -----------------------
 def reset_state():
     st.session_state.base = []
     st.session_state.base_ids = []
     st.session_state.used = {ax:set() for ax in AXES}
-    st.session_state.answers = {}     # id -> {"axis","value","label","prompt","is_extra"}
+    st.session_state.answers = {}
     st.session_state.extra = []
-    st.session_state.base_done = False
+    st.session_state.extra_added = False
     st.session_state.result_ready = False
-    st.session_state.unresolved_axes = []
-    st.session_state.answer_log = []
+    st.session_state.answer_log_ordered = []
     st.session_state.submitted = False
 
 if "mode" not in st.session_state:
@@ -114,7 +93,7 @@ except Exception as e:
     st.error(f"questions_bank.json 파일을 열 수 없습니다: {e}")
     st.stop()
 
-# === 모드 라디오 (변경 시 상태 초기화) ===
+# === 모드 라디오 ===
 def on_mode_change():
     st.session_state.mode = "general" if st.session_state._aud.startswith("일반") else "senior"
     reset_state()
@@ -130,10 +109,9 @@ st.radio(
     on_change=on_mode_change
 )
 
-# 현재 모드에 맞는 뱅크
 bank = filter_by_audience(DATA, st.session_state.mode)
 
-# ----------------------- 기본 문항 선택 -----------------------
+# ----------------------- 기본 8문항 선정 -----------------------
 if not st.session_state.base:
     base, base_ids, used = [], [], {ax:set() for ax in AXES}
     for ax in AXES:
@@ -141,31 +119,28 @@ if not st.session_state.base:
         if len(qs) < 2:
             st.error(f"{ax} 축 문항이 2개 미만입니다. JSON을 보강하세요.")
             st.stop()
-        qA,qB = sample_two(qs)
+        qA, qB = sample_two(qs)
         q1 = dict(id=f"base_{ax}_1", axis=ax, **qA)
         q2 = dict(id=f"base_{ax}_2", axis=ax, **qB)
-        base += [q1,q2]; base_ids += [q1["id"], q2["id"]]
+        base += [q1, q2]; base_ids += [q1["id"], q2["id"]]
         used[ax].add(qA["prompt"]); used[ax].add(qB["prompt"])
     random.shuffle(base)
     st.session_state.base = base
     st.session_state.base_ids = base_ids
     st.session_state.used = used
 
-# ----------------------- 문항 렌더(번호, 선택 유지, 미응답 표시) -----------------------
+# ----------------------- 렌더 -----------------------
 def render_question(q, number):
     answered = q["id"] in st.session_state.answers
     badge = "" if answered else " <span style='color:#b91c1c'>(미응답)</span>"
     st.markdown(f"**{number}) {q['prompt']}**{badge}", unsafe_allow_html=True)
 
-    # 라디오로 선택 유지(값/인덱스 매핑)
     key = f"sel_{q['id']}"
     options = [q["A"]["label"], q["B"]["label"]]
     default_idx = None
-    prev = st.session_state.answers[q["id"]]["value"] if answered else None
-    if prev == q["A"]["value"]:
-        default_idx = 0
-    elif prev == q["B"]["value"]:
-        default_idx = 1
+    if answered:
+        prev = st.session_state.answers[q["id"]]["value"]
+        default_idx = 0 if prev == q["A"]["value"] else 1 if prev == q["B"]["value"] else None
 
     choice = st.radio(
         " ",
@@ -175,7 +150,6 @@ def render_question(q, number):
         horizontal=False,
         label_visibility="collapsed"
     )
-    # 라디오 선택을 answers에 반영
     picked = q["A"] if choice == q["A"]["label"] else q["B"]
     st.session_state.answers[q["id"]] = {
         "axis": q["axis"],
@@ -185,100 +159,82 @@ def render_question(q, number):
         "is_extra": q.get("is_extra", False)
     }
 
+# ----------------------- 문항 출력 -----------------------
 st.header("문항")
-
-# 번호 부여: 기본 8 + 추가 문항까지 연속 번호
 all_qs = st.session_state.base + st.session_state.extra
 for idx, q in enumerate(all_qs, start=1):
     render_question(q, idx)
 
-# ----------------------- 평가/추가문항 로직 -----------------------
-def append_extra(axis, count=2):
-    pool = bank.get(axis, [])
-    remain = [q for q in pool if q["prompt"] not in st.session_state.used[axis]]
-    random.shuffle(remain)
-    added=0
-    for it in remain:
-        if added>=count: break
-        qid=f"ex_{axis}_{random.randint(1,10**9)}"
-        q = dict(id=qid, axis=axis, **it); q["is_extra"]=True
-        st.session_state.extra.append(q)
-        st.session_state.used[axis].add(it["prompt"])
-        added+=1
-    return added
+# ----------------------- 동률 검사 -----------------------
+def add_tiebreakers_if_needed():
+    answers = list(st.session_state.answers.values())
+    counts, totals = compute_counts(answers)
+    for ax in AXES:
+        a, b = POLES[ax]
+        if totals[ax] == 2 and counts[a] == counts[b]:
+            if not any(q.get("is_extra") and q["axis"]==ax for q in st.session_state.extra):
+                pool = bank.get(ax, [])
+                remain = [q for q in pool if q["prompt"] not in st.session_state.used[ax]]
+                if remain:
+                    it = random.choice(remain)
+                    qid = f"ex_{ax}_{random.randint(1,10**9)}"
+                    st.session_state.extra.append({**it, "id":qid, "axis":ax, "is_extra":True})
+                    st.session_state.used[ax].add(it["prompt"])
 
-# “현재 제시된” 문항이 모두 응답되었는지
+base_answered = sum(1 for i in st.session_state.base_ids if i in st.session_state.answers)
+if base_answered == 8 and not st.session_state.extra_added:
+    add_tiebreakers_if_needed()
+    st.session_state.extra_added = True
+
+# ----------------------- 제출 버튼 -----------------------
 def all_present_answered():
     ids = [q["id"] for q in (st.session_state.base + st.session_state.extra)]
     return all(i in st.session_state.answers for i in ids)
 
-# 1단계: 기본 8개가 모두 응답되면, 동률 축에 추가 2문항 생성
-base_answered = sum(1 for i in st.session_state.base_ids if i in st.session_state.answers)
-if base_answered==8 and not st.session_state.base_done:
-    model=compute_mbti(list(st.session_state.answers.values()))
-    added=0
-    for ax in AXES:
-        if need_more_after2(ax,model):
-            added += append_extra(ax,2)
-    st.session_state.base_done=True  # 추가 0이더라도 1단계 완료로 간주
-
-# 2단계: 추가문항까지 답하면, 4문항 상태에서 동률인 축에 다시 2문항(최대 6)
-if st.session_state.extra and all_present_answered():
-    cur = list(st.session_state.answers.values())
-    model = compute_mbti(cur)
-    for ax in AXES:
-        if model["totals"][ax]==4 and need_more_after4(ax, model):
-            # 이미 6 미만인 경우에만 더 추가
-            already = sum(1 for a in cur if a["axis"]==ax)
-            if already < 6:
-                append_extra(ax, 2)
-
-# “지금 보이는 문항” 기준으로 모두 응답했는지 재평가
 ready_for_submit = all_present_answered()
+submit = st.button("제출", type="primary", disabled=not ready_for_submit)
 
-# ----------------------- 제출 버튼(조건부 활성화) -----------------------
-col1, col2 = st.columns([1,3])
-with col1:
-    submit = st.button("제출", type="primary", disabled=not ready_for_submit)
-with col2:
-    # 남은 미응답 개수 표시
-    ids_now = [q["id"] for q in (st.session_state.base + st.session_state.extra)]
-    unanswered = [i for i in ids_now if i not in st.session_state.answers]
-    if unanswered:
-        st.info(f"미응답 문항: {len(unanswered)}개")
-
+# ----------------------- 제출 처리 -----------------------
 if submit:
-    # 최종 평가는 제출 시점에만 수행/표시
-    cur = list(st.session_state.answers.values())
-    model = compute_mbti(cur)
-    unresolved = []
-    for ax in AXES:
-        # 6문항까지 갔는데도 동률이면 판정 불가 → 괄호표기
-        if unresolved_after6(ax, model):
-            unresolved.append(ax)
-    disp_type = format_type_with_unresolved(model, unresolved)
+    cur = [st.session_state.answers[q["id"]] for q in (st.session_state.base + st.session_state.extra)]
+    counts, totals = compute_counts(cur)
+    tokens, per_axis_percent = {}, {}
 
-    # 결과 화면
+    for ax in AXES:
+        a, b = POLES[ax]
+        if counts[a] == counts[b]:
+            tokens[ax] = f"({a}{b})"
+        else:
+            tokens[ax] = a if counts[a] > counts[b] else b
+        pa, pb = percent(counts[a], counts[b])
+        per_axis_percent[ax] = (pa, pb, totals[ax])
+
+    disp_type = format_type_with_tie(tokens)
+
     st.subheader("결과")
     st.markdown(f"<h2>{disp_type}</h2>", unsafe_allow_html=True)
 
+    st.markdown("### 축별 선택 비율")
+    for ax in AXES:
+        a, b = POLES[ax]
+        pa, pb, tot = per_axis_percent[ax]
+        st.write(f"- {ax}: {a} {pa}% / {b} {pb}%  (총 {tot}문항)")
+
     st.subheader("팁")
-    for t in COMMON_TIPS: st.write(t)
+    for t in COMMON_TIPS:
+        st.write(t)
 
     st.subheader("MBTI 의미")
-    for k,v in MEANINGS: st.write(f"- **{k}**: {v}")
+    for k,v in MEANINGS:
+        st.write(f"- **{k}**: {v}")
 
     st.subheader("응답 로그")
-    # 시간순: 기본8 → 추가
-    ordered = []
-    for q in (st.session_state.base + st.session_state.extra):
-        if q["id"] in st.session_state.answers:
-            ordered.append(st.session_state.answers[q["id"]])
-    for i,a in enumerate(ordered, start=1):
+    for i,a in enumerate(cur, start=1):
         tag="추가 " if a.get("is_extra") else ""
         st.write(f"{i}) [{a['axis']}] {tag}{a['prompt']}")
         st.write(f"   → 선택: {a['label']} ({a['value']})")
 
-    # 제출 후에는 추가 입력 방지
+    st.session_state.result_ready = True
+    st.session_state.answer_log_ordered = cur
     st.session_state.submitted = True
     st.stop()
