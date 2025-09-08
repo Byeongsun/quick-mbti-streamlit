@@ -58,7 +58,7 @@ def compute_counts(answer_list):
         totals[a["axis"]] += 1
     return counts, totals
 
-def format_type_with_tie(tokens_by_axis):
+def format_type(tokens_by_axis):
     return "".join(tokens_by_axis[ax] for ax in AXES)
 
 def percent(a, b):
@@ -75,9 +75,7 @@ def reset_state():
     st.session_state.used = {ax:set() for ax in AXES}
     st.session_state.answers = {}
     st.session_state.extra = []
-    st.session_state.extra_added = False
     st.session_state.result_ready = False
-    st.session_state.answer_log_ordered = []
     st.session_state.submitted = False
 
 if "mode" not in st.session_state:
@@ -137,6 +135,7 @@ def render_question(q, number):
 
     key = f"sel_{q['id']}"
     options = [q["A"]["label"], q["B"]["label"]]
+
     default_idx = None
     if answered:
         prev = st.session_state.answers[q["id"]]["value"]
@@ -145,33 +144,30 @@ def render_question(q, number):
     choice = st.radio(
         " ",
         options=options,
-        index=default_idx,
+        index=default_idx,   # answered 없으면 None → 선택 안 된 상태
         key=key,
         horizontal=False,
         label_visibility="collapsed"
     )
-    picked = q["A"] if choice == q["A"]["label"] else q["B"]
-    st.session_state.answers[q["id"]] = {
-        "axis": q["axis"],
-        "value": picked["value"],
-        "label": picked["label"],
-        "prompt": q["prompt"],
-        "is_extra": q.get("is_extra", False)
-    }
-
-# ----------------------- 문항 출력 -----------------------
-st.header("문항")
-all_qs = st.session_state.base + st.session_state.extra
-for idx, q in enumerate(all_qs, start=1):
-    render_question(q, idx)
+    if choice:  # 실제 선택했을 때만 기록
+        picked = q["A"] if choice == q["A"]["label"] else q["B"]
+        st.session_state.answers[q["id"]] = {
+            "axis": q["axis"],
+            "value": picked["value"],
+            "label": picked["label"],
+            "prompt": q["prompt"],
+            "is_extra": q.get("is_extra", False)
+        }
 
 # ----------------------- 동률 검사 -----------------------
-def add_tiebreakers_if_needed():
-    answers = list(st.session_state.answers.values())
-    counts, totals = compute_counts(answers)
-    for ax in AXES:
-        a, b = POLES[ax]
-        if totals[ax] == 2 and counts[a] == counts[b]:
+def add_tiebreaker_if_needed(ax):
+    a, b = POLES[ax]
+    answers = [v for v in st.session_state.answers.values() if v["axis"]==ax]
+    if len(answers) == 2:  # 기본 2개 다 풀린 경우
+        ca = sum(1 for v in answers if v["value"]==a)
+        cb = sum(1 for v in answers if v["value"]==b)
+        if ca == cb:
+            # 이미 tie-breaker 없으면 추가
             if not any(q.get("is_extra") and q["axis"]==ax for q in st.session_state.extra):
                 pool = bank.get(ax, [])
                 remain = [q for q in pool if q["prompt"] not in st.session_state.used[ax]]
@@ -181,10 +177,15 @@ def add_tiebreakers_if_needed():
                     st.session_state.extra.append({**it, "id":qid, "axis":ax, "is_extra":True})
                     st.session_state.used[ax].add(it["prompt"])
 
-base_answered = sum(1 for i in st.session_state.base_ids if i in st.session_state.answers)
-if base_answered == 8 and not st.session_state.extra_added:
-    add_tiebreakers_if_needed()
-    st.session_state.extra_added = True
+# ----------------------- 문항 출력 -----------------------
+st.header("문항")
+all_qs = st.session_state.base + st.session_state.extra
+for idx, q in enumerate(all_qs, start=1):
+    render_question(q, idx)
+
+# 축별로 tie 여부 확인 → 즉시 추가문항 생성
+for ax in AXES:
+    add_tiebreaker_if_needed(ax)
 
 # ----------------------- 제출 버튼 -----------------------
 def all_present_answered():
@@ -209,7 +210,7 @@ if submit:
         pa, pb = percent(counts[a], counts[b])
         per_axis_percent[ax] = (pa, pb, totals[ax])
 
-    disp_type = format_type_with_tie(tokens)
+    disp_type = format_type(tokens)
 
     st.subheader("결과")
     st.markdown(f"<h2>{disp_type}</h2>", unsafe_allow_html=True)
@@ -235,6 +236,5 @@ if submit:
         st.write(f"   → 선택: {a['label']} ({a['value']})")
 
     st.session_state.result_ready = True
-    st.session_state.answer_log_ordered = cur
     st.session_state.submitted = True
     st.stop()
