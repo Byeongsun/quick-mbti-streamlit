@@ -2,153 +2,153 @@
   "EI": [
     {
       "audience": "general",
-      "prompt": "친구가 갑작스럽게 저녁 약속을 제안합니다.",
-      "A": { "label": "바로 좋다고 하고 함께하기로 한다.", "value": "E" },
-      "B": { "label": "일정을 확인하고 시간이 맞으면 참여한다.", "value": "I" }
-    },
-    {
-      "audience": "general",
-      "prompt": "직장에서 새로운 동료가 들어왔습니다.",
-      "A": { "label": "먼저 다가가 이야기를 시작한다.", "value": "E" },
-      "B": { "label": "필요할 때까지 조용히 지켜본다.", "value": "I" }
-    },
-    {
-      "audience": "general",
       "prompt": "주말에 혼자 시간을 보내게 되었습니다.",
       "A": { "label": "사람들과 어울릴 수 있는 모임을 찾아본다.", "value": "E" },
-      "B": { "label": "집에서 혼자 영화나 책을 즐긴다.", "value": "I" }
+      "B": { "label": "집에서 혼자 책이나 영화를 즐긴다.", "value": "I" }
     },
     {
       "audience": "general",
-      "prompt": "강의가 끝난 뒤 모르는 사람이 말을 걸었습니다.",
-      "A": { "label": "반갑게 대답하며 대화를 이어간다.", "value": "E" },
-      "B": { "label": "간단히 대답하고 자리를 뜬다.", "value": "I" }
+      "prompt": "새로운 동료가 들어왔습니다.",
+      "A": { "label": "먼저 다가가 이야기를 시작한다.", "value": "E" },
+      "B": { "label": "상대가 다가올 때까지 기다린다.", "value": "I" }
+    },
+    {
+      "audience": "general",
+      "prompt": "친구와 모임에 초대받았습니다.",
+      "A": { "label": "새로운 사람 만나는 게 즐겁다.", "value": "E" },
+      "B": { "label": "부담스러워서 망설인다.", "value": "I" }
     },
     {
       "audience": "senior",
-      "prompt": "경로당에 새 회원이 왔습니다.",
-      "A": { "label": "먼저 인사하며 어울리도록 돕는다.", "value": "E" },
-      "B": { "label": "조용히 지켜보다가 필요할 때만 말한다.", "value": "I" }
+      "prompt": "이웃이 저녁 산책을 제안합니다.",
+      "A": { "label": "흔쾌히 나가서 대화하며 걷는다.", "value": "E" },
+      "B": { "label": "정중히 거절하고 혼자 쉰다.", "value": "I" }
     },
     {
       "audience": "senior",
-      "prompt": "손주가 주말에 같이 놀러 가자고 합니다.",
-      "A": { "label": "즉시 동의하며 계획을 함께 세운다.", "value": "E" },
-      "B": { "label": "체력을 고려해 천천히 답한다.", "value": "I" }
+      "prompt": "손주가 친구들과 노는 자리에 함께 가자고 합니다.",
+      "A": { "label": "사람들 속에서 즐겁게 어울린다.", "value": "E" },
+      "B": { "label": "집에서 조용히 쉬고 싶다.", "value": "I" }
+    },
+    {
+      "audience": "senior",
+      "prompt": "동네 경로당에서 모임이 있습니다.",
+      "A": { "label": "참석해 대화를 즐긴다.", "value": "E" },
+      "B": { "label": "번거로워서 빠진다.", "value": "I" }
     }
   ],
   "SN": [
     {
       "audience": "general",
-      "prompt": "가족 여행을 계획합니다.",
-      "A": { "label": "일정과 숙소를 꼼꼼히 정한다.", "value": "S" },
-      "B": { "label": "분위기와 경험을 먼저 그려보고 현지에서 조정한다.", "value": "N" }
-    },
-    {
-      "audience": "general",
-      "prompt": "새 프로젝트를 맡게 되었습니다.",
-      "A": { "label": "세부 단계와 업무 분담을 명확히 한다.", "value": "S" },
-      "B": { "label": "큰 방향과 목표를 먼저 설정한다.", "value": "N" }
-    },
-    {
-      "audience": "general",
       "prompt": "새로운 음식을 요리합니다.",
       "A": { "label": "레시피의 순서를 그대로 따른다.", "value": "S" },
-      "B": { "label": "상상하며 재료를 조합해 본다.", "value": "N" }
+      "B": { "label": "자신의 감각대로 재료를 응용한다.", "value": "N" }
     },
     {
       "audience": "general",
       "prompt": "회의에서 의견을 제시할 때,",
       "A": { "label": "구체적 자료와 수치를 근거로 한다.", "value": "S" },
-      "B": { "label": "미래 가능성과 아이디어 중심으로 이야기한다.", "value": "N" }
+      "B": { "label": "큰 그림과 가능성을 강조한다.", "value": "N" }
+    },
+    {
+      "audience": "general",
+      "prompt": "새로운 프로젝트를 시작할 때,",
+      "A": { "label": "실행 계획과 필요한 자원을 먼저 확인한다.", "value": "S" },
+      "B": { "label": "가능성과 비전을 먼저 상상한다.", "value": "N" }
     },
     {
       "audience": "senior",
-      "prompt": "정기 검진 예약을 잡아야 합니다.",
-      "A": { "label": "병원·이동을 구체적으로 확인한다.", "value": "S" },
-      "B": { "label": "생활 흐름에 맞춰 여유 있는 날을 고른다.", "value": "N" }
+      "prompt": "병원에서 의사 설명을 들을 때,",
+      "A": { "label": "약 복용법과 수치를 꼼꼼히 확인한다.", "value": "S" },
+      "B": { "label": "치료의 전반적인 방향과 가능성을 묻는다.", "value": "N" }
     },
     {
       "audience": "senior",
-      "prompt": "새로운 운동을 시작하려 합니다.",
-      "A": { "label": "시간·장소·방법을 정해둔다.", "value": "S" },
-      "B": { "label": "건강해진 내 모습을 상상하며 동기부여한다.", "value": "N" }
+      "prompt": "시장에 가서 장을 볼 때,",
+      "A": { "label": "필요한 품목을 목록대로 산다.", "value": "S" },
+      "B": { "label": "상황에 따라 새로운 음식을 시도한다.", "value": "N" }
+    },
+    {
+      "audience": "senior",
+      "prompt": "건강 관리 방법을 선택할 때,",
+      "A": { "label": "정해진 운동법을 꾸준히 따른다.", "value": "S" },
+      "B": { "label": "새로운 방법을 찾아 다양하게 시도한다.", "value": "N" }
     }
   ],
   "TF": [
     {
       "audience": "general",
-      "prompt": "동료가 프로젝트 실수로 힘들어합니다.",
-      "A": { "label": "실수를 분석하고 해결책을 제시한다.", "value": "T" },
-      "B": { "label": "위로하며 감정을 먼저 공감한다.", "value": "F" }
-    },
-    {
-      "audience": "general",
-      "prompt": "팀 회의에서 의견 충돌이 발생했습니다.",
-      "A": { "label": "논리적 근거를 중심으로 토론한다.", "value": "T" },
-      "B": { "label": "분위기를 고려하며 모두가 납득할 방안을 찾는다.", "value": "F" }
+      "prompt": "친구가 시험에 떨어졌습니다.",
+      "A": { "label": "공부법을 같이 짜준다.", "value": "T" },
+      "B": { "label": "격려하고 마음을 위로한다.", "value": "F" }
     },
     {
       "audience": "general",
       "prompt": "가족이 건강 문제로 불안해합니다.",
-      "A": { "label": "자료를 찾아 설명해 준다.", "value": "T" },
+      "A": { "label": "치료 방법과 정보를 찾아준다.", "value": "T" },
       "B": { "label": "걱정하는 마음을 진심으로 달랜다.", "value": "F" }
     },
     {
       "audience": "general",
-      "prompt": "친구가 시험에 떨어졌습니다.",
-      "A": { "label": "공부법을 같이 짜준다.", "value": "T" },
-      "B": { "label": "먼저 위로하고 힘을 북돋운다.", "value": "F" }
+      "prompt": "회의에서 의견 차이가 있습니다.",
+      "A": { "label": "논리적으로 근거를 제시한다.", "value": "T" },
+      "B": { "label": "상대의 기분을 고려한다.", "value": "F" }
     },
     {
       "audience": "senior",
-      "prompt": "이웃과 다툼이 있었습니다.",
-      "A": { "label": "사실을 정리해 해결 방안을 제안한다.", "value": "T" },
-      "B": { "label": "상대의 감정을 이해하고 풀어준다.", "value": "F" }
+      "prompt": "손주가 공부를 못해 속상해합니다.",
+      "A": { "label": "공부 계획을 다시 짜준다.", "value": "T" },
+      "B": { "label": "격려와 위로의 말을 건넨다.", "value": "F" }
     },
     {
       "audience": "senior",
-      "prompt": "가족이 생활비 문제로 고민합니다.",
-      "A": { "label": "합리적 분배 방법을 제안한다.", "value": "T" },
-      "B": { "label": "고민을 들어주고 위로한다.", "value": "F" }
+      "prompt": "친구가 몸이 아파 힘들어합니다.",
+      "A": { "label": "병원 정보를 알려주고 방법을 찾는다.", "value": "T" },
+      "B": { "label": "마음을 어루만지고 위로한다.", "value": "F" }
+    },
+    {
+      "audience": "senior",
+      "prompt": "자녀와 갈등이 생겼습니다.",
+      "A": { "label": "이유와 논리를 설명한다.", "value": "T" },
+      "B": { "label": "감정을 헤아리고 공감한다.", "value": "F" }
     }
   ],
   "JP": [
     {
       "audience": "general",
-      "prompt": "중요한 과제 마감이 다가옵니다.",
-      "A": { "label": "계획에 맞춰 차근차근 끝낸다.", "value": "J" },
-      "B": { "label": "상황에 따라 융통성 있게 처리한다.", "value": "P" }
+      "prompt": "친구와 여행을 준비합니다.",
+      "A": { "label": "세부 일정과 동선을 미리 짠다.", "value": "J" },
+      "B": { "label": "대략만 정하고 즉흥적으로 움직인다.", "value": "P" }
     },
     {
       "audience": "general",
       "prompt": "휴일에 집안 청소를 해야 합니다.",
       "A": { "label": "순서를 정해 체계적으로 한다.", "value": "J" },
-      "B": { "label": "눈에 띄는 곳부터 한다.", "value": "P" }
+      "B": { "label": "눈에 보이는 대로 즉흥적으로 한다.", "value": "P" }
     },
     {
       "audience": "general",
-      "prompt": "친구와 여행을 준비합니다.",
-      "A": { "label": "세부 일정과 동선을 미리 짠다.", "value": "J" },
-      "B": { "label": "가서 상황을 보며 정한다.", "value": "P" }
-    },
-    {
-      "audience": "general",
-      "prompt": "새 프로젝트를 시작합니다.",
-      "A": { "label": "체계적인 계획을 수립한다.", "value": "J" },
-      "B": { "label": "아이디어가 떠오르는 대로 진행한다.", "value": "P" }
+      "prompt": "업무 마감이 다가올 때,",
+      "A": { "label": "일찍 계획을 세워 끝낸다.", "value": "J" },
+      "B": { "label": "마지막 순간에 집중해서 처리한다.", "value": "P" }
     },
     {
       "audience": "senior",
-      "prompt": "정기 검진과 약 복용을 관리합니다.",
-      "A": { "label": "달력에 미리 기록해 둔다.", "value": "J" },
-      "B": { "label": "필요할 때마다 확인한다.", "value": "P" }
+      "prompt": "건강 검진을 앞두고 있습니다.",
+      "A": { "label": "일정을 미리 확인하고 준비한다.", "value": "J" },
+      "B": { "label": "검진 당일 상황에 맞춰 대응한다.", "value": "P" }
     },
     {
       "audience": "senior",
-      "prompt": "손주와 소풍을 갑니다.",
-      "A": { "label": "도시락·시간표를 미리 준비한다.", "value": "J" },
-      "B": { "label": "현장에서 맞춰본다.", "value": "P" }
+      "prompt": "가족 모임을 준비할 때,",
+      "A": { "label": "음식과 자리를 미리 정리해둔다.", "value": "J" },
+      "B": { "label": "그때그때 필요한 대로 준비한다.", "value": "P" }
+    },
+    {
+      "audience": "senior",
+      "prompt": "취미 활동을 할 때,",
+      "A": { "label": "정해진 시간에 맞춰 꾸준히 한다.", "value": "J" },
+      "B": { "label": "기분이 내킬 때마다 자유롭게 한다.", "value": "P" }
     }
   ]
 }
