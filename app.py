@@ -107,7 +107,6 @@ st.radio(
     on_change=on_mode_change
 )
 
-# 🔑 현재 모드에 맞는 문항 bank
 bank = filter_by_audience(DATA, st.session_state.mode)
 
 # ----------------------- 기본 8문항 선정 -----------------------
@@ -136,12 +135,16 @@ def render_question(q, number):
     prev_val = st.session_state.answers[q["id"]]["value"] if q["id"] in st.session_state.answers else None
     default_idx = 0 if prev_val == q["A"]["value"] else 1 if prev_val == q["B"]["value"] else None
 
+    # 번호 + 질문 출력
+    st.markdown(f"**{number}) {q['prompt']}**")
+
     choice = st.radio(
-        f"{number}) {q['prompt']}",
+        " ",
         options=options,
         index=default_idx,
         key=key,
-        horizontal=False
+        horizontal=False,
+        label_visibility="collapsed"
     )
 
     picked = None
@@ -195,7 +198,9 @@ def all_present_answered():
     ids = [q["id"] for q in (st.session_state.base + st.session_state.extra)]
     return all(i in st.session_state.answers for i in ids)
 
-unanswered_count = len([q for q in (st.session_state.base + st.session_state.extra) if q["id"] not in st.session_state.answers])
+total_qs = len(st.session_state.base + st.session_state.extra)
+answered_qs = len(st.session_state.answers)
+unanswered_count = total_qs - answered_qs
 st.info(f"남은 미응답 문항: {unanswered_count}개")
 
 ready_for_submit = all_present_answered()
