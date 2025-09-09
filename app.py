@@ -91,7 +91,7 @@ except Exception as e:
     st.error(f"questions_bank.json 파일을 열 수 없습니다: {e}")
     st.stop()
 
-# === 모드 라디오 ===
+# === 모드 라디오 (일반/어르신) ===
 def on_mode_change():
     st.session_state.mode = "general" if st.session_state._aud.startswith("일반") else "senior"
     reset_state()
@@ -107,6 +107,7 @@ st.radio(
     on_change=on_mode_change
 )
 
+# 🔑 현재 모드에 맞는 문항 bank
 bank = filter_by_audience(DATA, st.session_state.mode)
 
 # ----------------------- 기본 8문항 선정 -----------------------
@@ -127,7 +128,7 @@ if not st.session_state.base:
     st.session_state.base_ids = base_ids
     st.session_state.used = used
 
-# ----------------------- 렌더 -----------------------
+# ----------------------- 문항 렌더 -----------------------
 def render_question(q, number):
     answered = q["id"] in st.session_state.answers
     badge = "" if answered else " <span style='color:#b91c1c'>(미응답)</span>"
@@ -136,21 +137,26 @@ def render_question(q, number):
     key = f"sel_{q['id']}"
     options = [q["A"]["label"], q["B"]["label"]]
 
-    default_idx = None
-    if answered:
-        prev = st.session_state.answers[q["id"]]["value"]
-        default_idx = 0 if prev == q["A"]["value"] else 1 if prev == q["B"]["value"] else None
+    prev_val = st.session_state.answers[q["id"]]["value"] if answered else None
+    default_idx = 0 if prev_val == q["A"]["value"] else 1 if prev_val == q["B"]["value"] else None
 
     choice = st.radio(
         " ",
         options=options,
-        index=default_idx,   # answered 없으면 None → 선택 안 된 상태
+        index=default_idx,
         key=key,
         horizontal=False,
         label_visibility="collapsed"
     )
-    if choice:  # 실제 선택했을 때만 기록
-        picked = q["A"] if choice == q["A"]["label"] else q["B"]
+
+    if choice == q["A"]["label"]:
+        picked = q["A"]
+    elif choice == q["B"]["label"]:
+        picked = q["B"]
+    else:
+        picked = None
+
+    if picked:
         st.session_state.answers[q["id"]] = {
             "axis": q["axis"],
             "value": picked["value"],
@@ -158,6 +164,8 @@ def render_question(q, number):
             "prompt": q["prompt"],
             "is_extra": q.get("is_extra", False)
         }
+    elif q["id"] in st.session_state.answers:
+        del st.session_state.answers[q["id"]]
 
 # ----------------------- 동률 검사 -----------------------
 def add_tiebreaker_if_needed(ax):
@@ -167,7 +175,6 @@ def add_tiebreaker_if_needed(ax):
         ca = sum(1 for v in answers if v["value"]==a)
         cb = sum(1 for v in answers if v["value"]==b)
         if ca == cb:
-            # 이미 tie-breaker 없으면 추가
             if not any(q.get("is_extra") and q["axis"]==ax for q in st.session_state.extra):
                 pool = bank.get(ax, [])
                 remain = [q for q in pool if q["prompt"] not in st.session_state.used[ax]]
