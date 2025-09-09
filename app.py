@@ -91,7 +91,7 @@ except Exception as e:
     st.error(f"questions_bank.json 파일을 열 수 없습니다: {e}")
     st.stop()
 
-# === 모드 라디오 (일반/어르신) ===
+# === 모드 라디오 ===
 def on_mode_change():
     st.session_state.mode = "general" if st.session_state._aud.startswith("일반") else "senior"
     reset_state()
@@ -130,31 +130,26 @@ if not st.session_state.base:
 
 # ----------------------- 문항 렌더 -----------------------
 def render_question(q, number):
-    answered = q["id"] in st.session_state.answers
-    badge = "" if answered else " <span style='color:#b91c1c'>(미응답)</span>"
-    st.markdown(f"**{number}) {q['prompt']}**{badge}", unsafe_allow_html=True)
-
     key = f"sel_{q['id']}"
     options = [q["A"]["label"], q["B"]["label"]]
 
-    prev_val = st.session_state.answers[q["id"]]["value"] if answered else None
+    prev_val = st.session_state.answers[q["id"]]["value"] if q["id"] in st.session_state.answers else None
     default_idx = 0 if prev_val == q["A"]["value"] else 1 if prev_val == q["B"]["value"] else None
 
     choice = st.radio(
-        " ",
+        f"{number}) {q['prompt']}",
         options=options,
         index=default_idx,
         key=key,
-        horizontal=False,
-        label_visibility="collapsed"
+        horizontal=False
     )
 
+    # 답변 반영
+    picked = None
     if choice == q["A"]["label"]:
         picked = q["A"]
     elif choice == q["B"]["label"]:
         picked = q["B"]
-    else:
-        picked = None
 
     if picked:
         st.session_state.answers[q["id"]] = {
@@ -167,6 +162,10 @@ def render_question(q, number):
     elif q["id"] in st.session_state.answers:
         del st.session_state.answers[q["id"]]
 
+    # 🚩 선택 반영 후 즉시 미응답 상태 표시
+    if q["id"] not in st.session_state.answers:
+        st.markdown("<span style='color:#b91c1c'>(미응답)</span>", unsafe_allow_html=True)
+
 # ----------------------- 동률 검사 -----------------------
 def add_tiebreaker_if_needed(ax):
     a, b = POLES[ax]
@@ -178,11 +177,13 @@ def add_tiebreaker_if_needed(ax):
             if not any(q.get("is_extra") and q["axis"]==ax for q in st.session_state.extra):
                 pool = bank.get(ax, [])
                 remain = [q for q in pool if q["prompt"] not in st.session_state.used[ax]]
-                if remain:
-                    it = random.choice(remain)
-                    qid = f"ex_{ax}_{random.randint(1,10**9)}"
-                    st.session_state.extra.append({**it, "id":qid, "axis":ax, "is_extra":True})
-                    st.session_state.used[ax].add(it["prompt"])
+                if not remain:
+                    st.warning(f"{ax} 축에 추가 문항이 없습니다. JSON을 보강하세요.")
+                    return
+                it = random.choice(remain)
+                qid = f"ex_{ax}_{random.randint(1,10**9)}"
+                st.session_state.extra.append({**it, "id":qid, "axis":ax, "is_extra":True})
+                st.session_state.used[ax].add(it["prompt"])
 
 # ----------------------- 문항 출력 -----------------------
 st.header("문항")
