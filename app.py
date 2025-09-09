@@ -144,7 +144,6 @@ def render_question(q, number):
         horizontal=False
     )
 
-    # 답변 반영
     picked = None
     if choice == q["A"]["label"]:
         picked = q["A"]
@@ -161,10 +160,6 @@ def render_question(q, number):
         }
     elif q["id"] in st.session_state.answers:
         del st.session_state.answers[q["id"]]
-
-    # 🚩 선택 반영 후 즉시 미응답 상태 표시
-    if q["id"] not in st.session_state.answers:
-        st.markdown("<span style='color:#b91c1c'>(미응답)</span>", unsafe_allow_html=True)
 
 # ----------------------- 동률 검사 -----------------------
 def add_tiebreaker_if_needed(ax):
@@ -199,6 +194,9 @@ for ax in AXES:
 def all_present_answered():
     ids = [q["id"] for q in (st.session_state.base + st.session_state.extra)]
     return all(i in st.session_state.answers for i in ids)
+
+unanswered_count = len([q for q in (st.session_state.base + st.session_state.extra) if q["id"] not in st.session_state.answers])
+st.info(f"남은 미응답 문항: {unanswered_count}개")
 
 ready_for_submit = all_present_answered()
 submit = st.button("제출", type="primary", disabled=not ready_for_submit)
